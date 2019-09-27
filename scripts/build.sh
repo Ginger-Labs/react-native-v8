@@ -6,7 +6,7 @@ source $(dirname $0)/env.sh
 ######################################################################################
 
 rm -rf $BUILD_DIR
-git clone --depth=1 --branch ${RN_VERSION} https://github.com/Ginger-Labs/react-native $BUILD_DIR
+git clone --depth=1 --branch ${RN_VERSION} https://github.com/Ginger-Labs/react-native.git $BUILD_DIR
 
 PATCHSET=(
   # Patch React Native build to support v8runtime

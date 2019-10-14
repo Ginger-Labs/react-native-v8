@@ -7,7 +7,7 @@ source $(dirname $0)/env.sh
 
 rm -rf $BUILD_DIR
 
-if [ $LOCAL_ONLY/ = true ] ; then
+if [ $LOCAL_ONLY = true ] ; then
   echo "Building locally isn't supported yet."
 else
   if [ $RN_VERSION = true] ; then	

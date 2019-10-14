@@ -12,9 +12,9 @@ if [ $LOCAL_ONLY = true ] ; then
 else
   if [ $RN_VERSION ] ; then	
     echo clonning v: $RN_VERSION into $BUILD_DIR
-    git clone --depth=1 --branch ${RN_VERSION} https://github.com/Ginger-Labs/react-native.git $BUILD_DIR
+    git clone --branch ${RN_VERSION} https://github.com/Ginger-Labs/react-native.git $BUILD_DIR
   else 
-    echo "RN_VERSION is not defined, please export RN_VERSION first (the version tag)"
+    echo "RN_VERSION is not defined, please export RN_VERSION first (the version tag or branch name)"
   fi
 fi
 

@@ -10,7 +10,7 @@ rm -rf $BUILD_DIR
 if [ $LOCAL_ONLY = true ] ; then
   echo "Building locally isn't supported yet."
 else
-  if [ $RN_VERSION = true] ; then	
+  if [ $RN_VERSION = true ] ; then	
     echo clonning v: $RN_VERSION into $BUILD_DIR
     git clone --depth=1 --branch ${RN_VERSION} https://github.com/Ginger-Labs/react-native.git $BUILD_DIR
   else 

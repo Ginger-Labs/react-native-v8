@@ -1,6 +1,6 @@
 {
   "name": "react-native-v8",
-  "version": "0.60.6-gl002",
+  "version": "0.60.6-gl003",
   "description": "Opt-in V8 runtime for React Native Android",
   "repository": {
     "type": "git",

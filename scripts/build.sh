@@ -6,7 +6,16 @@ source $(dirname $0)/env.sh
 ######################################################################################
 
 rm -rf $BUILD_DIR
-git clone --depth=1 --branch ${RN_VERSION} https://github.com/Ginger-Labs/react-native $BUILD_DIR
+if [ $LOCAL_ONLY = true ] ; then
+  echo "Building locally isn't supported yet."
+else
+  if [ $RN_VERSION ] ; then	
+    echo clonning v: $RN_VERSION into $BUILD_DIR
+    git clone --depth=1 --branch ${RN_VERSION} https://github.com/Ginger-Labs/react-native.git $BUILD_DIR
+  else 
+    echo "RN_VERSION is not defined, please export RN_VERSION first (the version tag or branch name)"
+  fi
+fi
 
 PATCHSET=(
   # Patch React Native build to support v8runtime

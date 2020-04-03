@@ -14,7 +14,7 @@ function abs_path()
     echo `$readlink $1`
 }
 
-CURR_DIR=$(dirname $(abs_path $0))
+CURR_DIR=$(dirname "$(abs_path $0)")
 ROOT_DIR=$(dirname $CURR_DIR)
 unset CURR_DIR
 

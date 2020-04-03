@@ -1,8 +1,8 @@
 diff --git a/ReactAndroid/build.gradle b/ReactAndroid/build.gradle
-index 3a155af..587c95d 100644
+index 42675dd..ce1e6b1 100644
 --- a/ReactAndroid/build.gradle
 +++ b/ReactAndroid/build.gradle
-@@ -183,6 +183,24 @@ task prepareJSC {
+@@ -190,6 +190,24 @@ task prepareJSC {
          }
      }
  }
@@ -27,28 +27,28 @@ index 3a155af..587c95d 100644
  task downloadNdkBuildDependencies {
      if (!boostPath) {
          dependsOn(downloadBoost)
-@@ -253,7 +271,7 @@ def getNdkBuildFullPath() {
-     return ndkBuildFullPath
+@@ -296,7 +314,7 @@ def getNdkBuildFullPath() {
  }
  
--task buildReactNdkLib(dependsOn: [prepareJSC, prepareHermes, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog], type: Exec) {
-+task buildReactNdkLib(dependsOn: [prepareJSC, prepareHermes, prepareV8, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog], type: Exec) {
+ def buildReactNdkLib = tasks.register("buildReactNdkLib", Exec) {
+-    dependsOn(prepareJSC, prepareHermes, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog, extractAARHeaders, extractJNIFiles)
++    dependsOn(prepareJSC, prepareHermes, prepareV8, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog, extractAARHeaders, extractJNIFiles)
+ 
      inputs.dir("$projectDir/../ReactCommon")
      inputs.dir("src/main/jni")
-     inputs.dir("src/main/java/com/facebook/react/modules/blob")
-@@ -292,6 +310,7 @@ task packageReactNdkLibs(dependsOn: buildReactNdkLib, type: Copy) {
+@@ -337,6 +355,7 @@ def packageReactNdkLibs = tasks.register("packageReactNdkLibs", Copy) {
      into("$buildDir/react-ndk/exported")
      exclude("**/libjsc.so")
      exclude("**/libhermes.so")
 +    exclude("**/libv8android.so")
  }
  
- task packageReactNdkLibsForBuck(dependsOn: packageReactNdkLibs, type: Copy) {
+ def packageReactNdkLibsForBuck = tasks.register("packageReactNdkLibsForBuck", Copy) {
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/ReactInstanceManagerBuilder.java b/ReactAndroid/src/main/java/com/facebook/react/ReactInstanceManagerBuilder.java
-index e58b8cc..d3e480f 100644
+index c5e6e0d..dfd791f 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/ReactInstanceManagerBuilder.java
 +++ b/ReactAndroid/src/main/java/com/facebook/react/ReactInstanceManagerBuilder.java
-@@ -26,6 +26,7 @@ import com.facebook.react.modules.core.DefaultHardwareBackBtnHandler;
+@@ -31,6 +31,7 @@ import com.facebook.react.modules.core.DefaultHardwareBackBtnHandler;
  import com.facebook.react.packagerconnection.RequestHandler;
  import com.facebook.react.uimanager.UIImplementationProvider;
  import com.facebook.soloader.SoLoader;
@@ -56,35 +56,62 @@ index e58b8cc..d3e480f 100644
  import java.util.ArrayList;
  import java.util.List;
  import java.util.Map;
-@@ -285,13 +286,6 @@ public class ReactInstanceManagerBuilder {
+@@ -291,40 +292,6 @@ public class ReactInstanceManagerBuilder {
    }
  
-   private JavaScriptExecutorFactory getDefaultJSExecutorFactory(String appName, String deviceName) {
+   private JavaScriptExecutorFactory getDefaultJSExecutorFactory(String appName, String deviceName, Context applicationContext) {
 -    try {
 -      // If JSC is included, use it as normal
+-      initializeSoLoaderIfNecessary(applicationContext);
 -      SoLoader.loadLibrary("jscexecutor");
 -      return new JSCExecutorFactory(appName, deviceName);
 -    } catch (UnsatisfiedLinkError jscE) {
+-      // https://github.com/facebook/hermes/issues/78 shows that
+-      // people who aren't trying to use Hermes are having issues.
+-      // https://github.com/facebook/react-native/issues/25923#issuecomment-554295179
+-      // includes the actual JSC error in at least one case.
+-      //
+-      // So, if "__cxa_bad_typeid" shows up in the jscE exception
+-      // message, then we will assume that's the failure and just
+-      // throw now.
+-
+-      if (jscE.getMessage().contains("__cxa_bad_typeid")) {
+-        throw jscE;
+-      }
+-
 -      // Otherwise use Hermes
--      return new HermesExecutorFactory();
+-      try {
+-        return new HermesExecutorFactory();
+-      } catch (UnsatisfiedLinkError hermesE) {
+-        // If we get here, either this is a JSC build, and of course
+-        // Hermes failed (since it's not in the APK), or it's a Hermes
+-        // build, and Hermes had a problem.
+-
+-        // We suspect this is a JSC issue (it's the default), so we
+-        // will throw that exception, but we will print hermesE first,
+-        // since it could be a Hermes issue and we don't want to
+-        // swallow that.
+-        hermesE.printStackTrace();
+-        throw jscE;
+-      }
 -    }
 +    return new V8ExecutorFactory();
    }
  }
 diff --git a/ReactAndroid/src/main/jni/react/jni/Android.mk b/ReactAndroid/src/main/jni/react/jni/Android.mk
-index cb88bb8..f657020 100644
+index ed19e7f..4c54b83 100644
 --- a/ReactAndroid/src/main/jni/react/jni/Android.mk
 +++ b/ReactAndroid/src/main/jni/react/jni/Android.mk
-@@ -69,6 +69,8 @@ $(call import-module,jsi)
+@@ -70,6 +70,8 @@ $(call import-module,jsi)
  $(call import-module,jsiexecutor)
- $(call import-module,jscallinvoker)
+ $(call import-module,callinvoker)
  $(call import-module,hermes)
 +$(call import-add-path, $(REACT_COMMON_DIR)/jsi)
 +$(call import-module,v8runtime)
  
  include $(REACT_SRC_DIR)/turbomodule/core/jni/Android.mk
  
-@@ -79,4 +81,5 @@ include $(REACT_SRC_DIR)/turbomodule/core/jni/Android.mk
+@@ -80,4 +82,5 @@ include $(REACT_SRC_DIR)/turbomodule/core/jni/Android.mk
  include $(REACT_SRC_DIR)/jscexecutor/Android.mk
  include $(REACT_SRC_DIR)/../hermes/reactexecutor/Android.mk
  include $(REACT_SRC_DIR)/../hermes/instrumentation/Android.mk

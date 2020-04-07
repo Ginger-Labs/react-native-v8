@@ -41,4 +41,5 @@ yarn
 ./gradlew :ReactAndroid:installArchives
 
 mkdir -p $DIST_DIR
+cd ..
 cp -Rf $BUILD_DIR/android/* $DIST_DIR

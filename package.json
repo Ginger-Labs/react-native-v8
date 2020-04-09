@@ -24,9 +24,6 @@
     "export_npm_env": "./scripts/export_npm_env.sh",
     "build": "bash -c '. ./scripts/export_npm_env.sh && ./scripts/build.sh'"
   },
-  "config": {
-    "RN_VERSION": "v0.62.2"
-  },
   "dependencies": {
     "v8-android": "~8.80.1"
   },

@@ -1,18 +1,27 @@
 diff --git a/ReactAndroid/build.gradle b/ReactAndroid/build.gradle
-index 42675dd..ce1e6b1 100644
+index 595bfaf..6cea953 100644
 --- a/ReactAndroid/build.gradle
 +++ b/ReactAndroid/build.gradle
-@@ -190,6 +190,24 @@ task prepareJSC {
+@@ -190,6 +190,33 @@ task prepareJSC {
          }
      }
  }
 +
 +task prepareV8 {
 +    doLast {
-+        def v8PackageRoot = file("$projectDir/../../node_modules/v8-android/dist")
-+        def v8AAR = fileTree(v8PackageRoot).matching({ it.include "**/v8-android/**/*.aar" }).singleFile
++        def v8PackagePath = findNodeModulePath(projectDir, "v8-android")
++        if (!v8PackagePath) {
++            throw new GradleScriptException("Could not find the v8-android npm package")
++        } 
++
++        def v8Dist = file("$v8PackagePath/dist")
++        if (!v8Dist.exists()) {
++            throw new GradleScriptException("The v8-android npm package is missing its \"dist\" directory")
++        }
++
++        def v8AAR = fileTree(v8Dist).matching({ it.include "**/v8-android/**/*.aar" }).singleFile
 +        def soFiles = zipTree(v8AAR).matching({ it.include "**/*.so" })
-+        def headerFiles = fileTree(v8PackageRoot).matching({ it.include "**/include/**" })
++        def headerFiles = fileTree(v8Dist).matching({ it.include "**/include/**" })
 +
 +        copy {
 +            from(soFiles)
@@ -27,7 +36,7 @@ index 42675dd..ce1e6b1 100644
  task downloadNdkBuildDependencies {
      if (!boostPath) {
          dependsOn(downloadBoost)
-@@ -296,7 +314,7 @@ def getNdkBuildFullPath() {
+@@ -296,7 +323,7 @@ def getNdkBuildFullPath() {
  }
  
  def buildReactNdkLib = tasks.register("buildReactNdkLib", Exec) {
@@ -36,7 +45,7 @@ index 42675dd..ce1e6b1 100644
  
      inputs.dir("$projectDir/../ReactCommon")
      inputs.dir("src/main/jni")
-@@ -337,6 +355,7 @@ def packageReactNdkLibs = tasks.register("packageReactNdkLibs", Copy) {
+@@ -337,6 +364,7 @@ def packageReactNdkLibs = tasks.register("packageReactNdkLibs", Copy) {
      into("$buildDir/react-ndk/exported")
      exclude("**/libjsc.so")
      exclude("**/libhermes.so")
@@ -45,10 +54,10 @@ index 42675dd..ce1e6b1 100644
  
  def packageReactNdkLibsForBuck = tasks.register("packageReactNdkLibsForBuck", Copy) {
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/ReactInstanceManagerBuilder.java b/ReactAndroid/src/main/java/com/facebook/react/ReactInstanceManagerBuilder.java
-index c5e6e0d..dfd791f 100644
+index e2809cd..1ae7cc6 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/ReactInstanceManagerBuilder.java
 +++ b/ReactAndroid/src/main/java/com/facebook/react/ReactInstanceManagerBuilder.java
-@@ -31,6 +31,7 @@ import com.facebook.react.modules.core.DefaultHardwareBackBtnHandler;
+@@ -30,6 +30,7 @@ import com.facebook.react.modules.core.DefaultHardwareBackBtnHandler;
  import com.facebook.react.packagerconnection.RequestHandler;
  import com.facebook.react.uimanager.UIImplementationProvider;
  import com.facebook.soloader.SoLoader;
@@ -56,10 +65,10 @@ index c5e6e0d..dfd791f 100644
  import java.util.ArrayList;
  import java.util.List;
  import java.util.Map;
-@@ -291,40 +292,6 @@ public class ReactInstanceManagerBuilder {
-   }
- 
-   private JavaScriptExecutorFactory getDefaultJSExecutorFactory(String appName, String deviceName, Context applicationContext) {
+@@ -291,40 +292,7 @@ public class ReactInstanceManagerBuilder {
+
+   private JavaScriptExecutorFactory getDefaultJSExecutorFactory(
+       String appName, String deviceName, Context applicationContext) {
 -    try {
 -      // If JSC is included, use it as normal
 -      initializeSoLoaderIfNecessary(applicationContext);
@@ -95,6 +104,7 @@ index c5e6e0d..dfd791f 100644
 -        throw jscE;
 -      }
 -    }
++    // initializeSoLoaderIfNecessary(applicationContext);
 +    return new V8ExecutorFactory();
    }
  }
@@ -118,10 +128,10 @@ index ed19e7f..4c54b83 100644
 +include $(REACT_SRC_DIR)/../v8/reactexecutor/Android.mk
  include $(REACT_SRC_DIR)/modules/blob/jni/Android.mk
 diff --git a/ReactCommon/cxxreact/Android.mk b/ReactCommon/cxxreact/Android.mk
-index 5ac26f4..c3afdae 100644
+index 553e0a9..7ab7ade 100644
 --- a/ReactCommon/cxxreact/Android.mk
 +++ b/ReactCommon/cxxreact/Android.mk
-@@ -31,3 +31,4 @@ $(call import-module,glog)
+@@ -32,3 +32,4 @@ $(call import-module,glog)
  $(call import-module,jsi)
  $(call import-module,jsinspector)
  $(call import-module,hermes/inspector)

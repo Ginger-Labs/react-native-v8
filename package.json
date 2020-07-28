@@ -1,6 +1,6 @@
 {
   "name": "react-native-v8",
-  "version": "0.63.2-patch.1-gl-001",
+  "version": "v0.63.2-patch.0-gl-001",
   "description": "Opt-in V8 runtime for React Native Android",
   "repository": {
     "type": "git",
@@ -24,11 +24,21 @@
     "export_npm_env": "./scripts/export_npm_env.sh",
     "build": "bash -c '. ./scripts/export_npm_env.sh && ./scripts/build.sh'"
   },
+<<<<<<< HEAD
+=======
+  "config": {
+    "RN_VERSION": "v0.63.2"
+  },
+>>>>>>> v0.63.2-patch.0
   "dependencies": {
-    "v8-android": "~8.80.1"
+    "v8-android": "~8.84.0"
   },
   "peerDependencies": {
+<<<<<<< HEAD
     "react-native": "^0.62.2"
+=======
+    "react-native": "^0.63.2"
+>>>>>>> v0.63.2-patch.0
   },
   "devDependencies": {
     "clang-format": "^1.4.0"

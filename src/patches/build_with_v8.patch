@@ -66,7 +66,7 @@ index a3b33f6..0fd33a9 100644
  import java.util.List;
  import java.util.Map;
 @@ -291,40 +292,7 @@ public class ReactInstanceManagerBuilder {
-
+ 
    private JavaScriptExecutorFactory getDefaultJSExecutorFactory(
        String appName, String deviceName, Context applicationContext) {
 -    try {
@@ -114,13 +114,14 @@ index 76c613b..56d6e2b 100644
 +++ b/ReactAndroid/src/main/jni/react/jni/Android.mk
 @@ -127,6 +127,8 @@ $(call import-module,jsiexecutor)
  $(call import-module,callinvoker)
+ $(call import-module,reactperflogger)
  $(call import-module,hermes)
 +$(call import-add-path, $(REACT_COMMON_DIR)/jsi)
 +$(call import-module,v8runtime)
+ $(call import-module,runtimeexecutor)
+ $(call import-module,react/nativemodule/core)
  
-include $(REACT_SRC_DIR)/turbomodule/core/jni/Android.mk
- 
-@@ -80,4 +82,5 @@ include $(REACT_SRC_DIR)/turbomodule/core/jni/Android.mk
+@@ -147,6 +149,7 @@ endif
  include $(REACT_SRC_DIR)/jscexecutor/Android.mk
  include $(REACT_SRC_DIR)/../hermes/reactexecutor/Android.mk
  include $(REACT_SRC_DIR)/../hermes/instrumentation/Android.mk
